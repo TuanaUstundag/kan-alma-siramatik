@@ -66,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAdminReset = document.getElementById('btn-admin-reset');
   const btnExportStatsCsv = document.getElementById('btn-export-stats-csv');
   const btnExportLogsCsv = document.getElementById('btn-export-logs-csv');
+  const tableFeedbacksRows = document.getElementById('table-feedbacks-rows');
+  const btnExportFeedbacksCsv = document.getElementById('btn-export-feedbacks-csv');
 
   // Nurse Timer & Clinical Elements
   const nurseTimerContainer = document.getElementById('nurse-timer-container');
@@ -130,11 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
       socket.on('ticket-created', handleRealtimeUpdate);
       socket.on('ticket-called', handleRealtimeUpdate);
       socket.on('ticket-completed', handleRealtimeUpdate);
+      socket.on('feedback-submitted', handleRealtimeUpdate);
       socket.on('queue-reset', handleRealtimeUpdate);
       socket.on('users-updated', () => {
         if (currentUser && currentUser.role === 'admin') {
           fetchUsers();
           fetchStats();
+          fetchFeedbacks();
         }
       });
     }
@@ -152,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (currentUser.role === 'admin') {
       fetchStats();
       fetchLogs();
+      fetchFeedbacks();
     }
   }
 
@@ -523,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Populate data
     fetchStats();
+    fetchFeedbacks();
     fetchUsers();
     fetchLogs();
   }
@@ -901,6 +907,87 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadCSV(`kan_alma_sistem_loglari_${dateStr}.csv`, csvData);
       } catch (err) {
         alert("Loglar indirilemedi: " + err.message);
+      }
+    });
+  }
+
+  // --- TAB 2: Patient Feedbacks & Reviews Logic ---
+  async function fetchFeedbacks() {
+    if (!currentUser || currentUser.role !== 'admin') return;
+
+    try {
+      const res = await fetch('/api/admin/feedbacks');
+      const feedbacks = await res.json();
+      renderFeedbacksTable(feedbacks);
+    } catch (err) {
+      console.error("Failed to load feedbacks:", err);
+    }
+  }
+
+  function renderFeedbacksTable(feedbacks) {
+    if (!tableFeedbacksRows) return;
+    tableFeedbacksRows.innerHTML = '';
+
+    if (!feedbacks || feedbacks.length === 0) {
+      tableFeedbacksRows.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-8 text-center text-slate-400 font-medium">Henüz hasta yorumu ve değerlendirmesi bulunmuyor.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    feedbacks.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-slate-50 transition-colors";
+      const dateStr = f.createdAt ? new Date(f.createdAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+      const starCount = Math.min(5, Math.max(1, f.rating || 5));
+      const starSymbols = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
+
+      tr.innerHTML = `
+        <td class="py-3.5 px-5 text-slate-400 font-mono text-[11px]">${dateStr}</td>
+        <td class="py-3.5 px-5 font-black text-blue-600">${f.ticketNumber || '-'}</td>
+        <td class="py-3.5 px-5 font-bold text-slate-800">${f.patientName || 'Misafir Hasta'}</td>
+        <td class="py-3.5 px-5 text-slate-600 font-medium">${f.desk || 'Kan Alma'}</td>
+        <td class="py-3.5 px-5 font-black text-amber-500 tracking-wider">
+          <span>${starSymbols}</span>
+          <span class="text-slate-500 font-bold text-xs ml-1">(${starCount}/5)</span>
+        </td>
+        <td class="py-3.5 px-5 text-slate-700 italic max-w-sm break-words">
+          ${f.comment ? `"${f.comment}"` : '<span class="text-slate-300 not-italic">Yorum yazılmadı</span>'}
+        </td>
+      `;
+      tableFeedbacksRows.appendChild(tr);
+    });
+  }
+
+  // Export Feedbacks to CSV
+  if (btnExportFeedbacksCsv) {
+    btnExportFeedbacksCsv.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/admin/feedbacks');
+        const feedbacks = await res.json();
+
+        const dateStr = new Date().toISOString().split('T')[0];
+        const csvData = [
+          ["TARİH / SAAT", "SIRA NUMARASI", "HASTA ADI", "BİRİM / ODA", "GÖREVLİ PERSONEL", "YILDIZ PUANI (1-5)", "HASTA DEĞERLENDİRME YORUMU"],
+          ...feedbacks.map(f => {
+            const localTime = f.createdAt ? new Date(f.createdAt).toLocaleString('tr-TR') : '-';
+            return [
+              localTime,
+              f.ticketNumber,
+              f.patientName || "Misafir Hasta",
+              f.desk || "Kan Alma",
+              f.processedBy || "-",
+              f.rating || 5,
+              f.comment || "-"
+            ];
+          })
+        ];
+
+        downloadCSV(`kan_alma_hasta_yorumlari_${dateStr}.csv`, csvData);
+      } catch (err) {
+        alert("Yorumlar indirilemedi: " + err.message);
       }
     });
   }

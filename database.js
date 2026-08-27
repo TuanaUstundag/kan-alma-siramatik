@@ -306,18 +306,22 @@ const Database = {
     if (!db.feedbacks) db.feedbacks = [];
 
     const numRating = Number(rating) || 5;
+    const cleanNo = (number || '').toUpperCase();
+    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
+
     const feedbackItem = {
       ticketNumber: number,
+      patientName: ticket ? (ticket.patientName || "Misafir Hasta") : "Misafir Hasta",
+      desk: ticket ? (ticket.desk || "Kan Alma") : "Kan Alma",
+      processedBy: ticket ? (ticket.processedBy || "-") : "-",
       rating: Math.min(5, Math.max(1, numRating)),
-      comment: comment || "",
+      comment: comment ? comment.trim() : "",
       createdAt: new Date().toISOString()
     };
 
     db.feedbacks.push(feedbackItem);
 
     // Also attach to the ticket if exists
-    const cleanNo = (number || '').toUpperCase();
-    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
     if (ticket) {
       ticket.rating = feedbackItem.rating;
       ticket.feedbackComment = feedbackItem.comment;
@@ -325,6 +329,11 @@ const Database = {
 
     writeDb(db);
     return feedbackItem;
+  },
+
+  getFeedbacks() {
+    const db = readDb();
+    return (db.feedbacks || []).slice().reverse();
   },
 
   resetQueue(userEmail = "admin@hastane.com") {

@@ -98,6 +98,11 @@ app.get('/api/admin/logs', (req, res) => {
   res.json(Database.getLogs());
 });
 
+// Admin Route: Get Feedbacks & Reviews List
+app.get('/api/admin/feedbacks', (req, res) => {
+  res.json(Database.getFeedbacks());
+});
+
 // Get current queue statistics
 app.get('/api/stats', (req, res) => {
   res.json(Database.getStats());

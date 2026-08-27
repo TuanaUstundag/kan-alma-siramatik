@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const starButtons = document.querySelectorAll('.star-btn');
   let selectedRating = 5;
   let preAlertTriggered = false;
+  let callAcknowledged = false;
+  let lastCalledTimestamp = null;
 
   // Web Audio Context
   let audioCtx = null;
@@ -250,10 +252,19 @@ document.addEventListener('DOMContentLoaded', () => {
       statusDesc.className = "text-xs font-semibold text-emerald-100";
       statusDesc.textContent = `Lütfen hemen ${ticket.desk} ünitesine geçiniz.`;
 
-      showCallingModal(ticket.desk);
+      // If this is a new call or a recall (new calledAt timestamp), reset acknowledgement
+      if (ticket.calledAt && ticket.calledAt !== lastCalledTimestamp) {
+        lastCalledTimestamp = ticket.calledAt;
+        callAcknowledged = false;
+      }
+
+      if (!callAcknowledged) {
+        showCallingModal(ticket.desk);
+      }
       if (feedbackCard) feedbackCard.classList.add('hidden');
     } 
     else if (ticket.status === 'completed') {
+      callAcknowledged = true;
       statusCard.className = "bg-slate-100 border border-slate-200 rounded-2xl p-5 text-center space-y-2 text-slate-600";
       statusIcon.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -268,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (feedbackCard) feedbackCard.classList.remove('hidden');
     }
     else if (ticket.status === 'noshow') {
+      callAcknowledged = true;
       statusCard.className = "bg-rose-50 border border-rose-200 rounded-2xl p-5 text-center space-y-2 text-rose-700";
       statusIcon.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showCallingModal(desk) {
+    if (callAcknowledged) return;
     callingModalDesk.textContent = desk;
     if (callingModal.classList.contains('hidden')) {
       callingModal.classList.remove('hidden');
@@ -316,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.emit('track-ticket', ticketNumber);
 
     socket.on('your-turn', (data) => {
+      callAcknowledged = false;
       refreshData();
       showCallingModal(data.desk || data.ticket.desk);
     });
@@ -327,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnAckCalling.addEventListener('click', () => {
+    callAcknowledged = true;
     callingModal.classList.add('hidden');
     initAudio();
   });

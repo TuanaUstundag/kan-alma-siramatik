@@ -231,17 +231,20 @@
         <div id="admin-view" class="hidden w-full max-w-5xl space-y-6">
             
             <!-- Tab Navigation Menu -->
-            <nav class="flex space-x-2 border-b border-slate-200 pb-px">
-                <button class="btn-admin-tab border-b-2 border-blue-600 px-5 py-3 text-sm font-bold text-blue-600 focus:outline-none" data-tab="tab-stats">
+            <nav class="flex space-x-2 border-b border-slate-200 pb-px overflow-x-auto">
+                <button class="btn-admin-tab border-b-2 border-blue-600 px-5 py-3 text-sm font-bold text-blue-600 focus:outline-none whitespace-nowrap" data-tab="tab-stats">
                     İşlem İstatistikleri & Canlı Sıra
                 </button>
-                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-users">
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none whitespace-nowrap" data-tab="tab-feedbacks">
+                    ⭐ Hasta Yorumları & Puanlar
+                </button>
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none whitespace-nowrap" data-tab="tab-users">
                     Çalışan (Hemşire) Yönetimi
                 </button>
-                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-logs">
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none whitespace-nowrap" data-tab="tab-logs">
                     Sistem Aktivite Logları
                 </button>
-                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-system">
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none whitespace-nowrap" data-tab="tab-system">
                     Sistem Kontrolleri
                 </button>
             </nav>
@@ -331,7 +334,41 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: Nurse Management (CRUD) -->
+                <!-- TAB 2: Patient Feedbacks & Reviews -->
+                <div id="tab-feedbacks" class="admin-tab-content hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="font-extrabold text-slate-800 text-lg">Hasta Memnuniyeti ve Yorumları</h3>
+                            <p class="text-xs text-slate-500">Hastaların işlem sonrası telefonlarından bıraktığı yıldız puanları ve değerlendirme yorumları.</p>
+                        </div>
+                        <button id="btn-export-feedbacks-csv" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2">
+                            <span>📥 Yorumları Excel Olarak İndir (CSV)</span>
+                        </button>
+                    </div>
+
+                    <!-- Feedbacks Table -->
+                    <div class="overflow-x-auto border border-slate-100 rounded-2xl">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+                                    <th class="py-3.5 px-5">TARİH & SAAT</th>
+                                    <th class="py-3.5 px-5">SIRA NO</th>
+                                    <th class="py-3.5 px-5">HASTA ADI</th>
+                                    <th class="py-3.5 px-5">BİRİM / ODA</th>
+                                    <th class="py-3.5 px-5">PUAN</th>
+                                    <th class="py-3.5 px-5">HASTA YORUMU</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-feedbacks-rows" class="divide-y divide-slate-100 font-medium text-slate-600">
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-slate-400 font-medium">Henüz hasta yorumu bulunmuyor.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Nurse Management (CRUD) -->
                 <div id="tab-users" class="admin-tab-content hidden grid grid-cols-12 gap-8">
                     <!-- Left: Add user form -->
                     <div class="col-span-12 md:col-span-5 bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
