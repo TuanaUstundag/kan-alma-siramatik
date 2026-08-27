@@ -244,6 +244,11 @@ app.get('/track', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'track.html'));
 });
 
+// Mobile Kiosk (Contactless Ticket Dispenser for Phones)
+app.get(['/sira-al', '/mobile-kiosk'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mobile-kiosk.html'));
+});
+
 // Fallback to Kiosk page for any other route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'kiosk.html'));

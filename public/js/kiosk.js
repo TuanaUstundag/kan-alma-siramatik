@@ -1,36 +1,84 @@
-// Kiosk Screen Business Logic
+// Contactless Lobby Kiosk Business Logic
 
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
   const clockEl = document.getElementById('clock');
   const dateEl = document.getElementById('date');
-  const btnGetTicket = document.getElementById('btn-get-ticket');
-  const btnGetPriorityTicket = document.getElementById('btn-get-priority-ticket');
   const waitingCountEl = document.getElementById('waiting-count');
   const lastCalledEl = document.getElementById('last-called');
   
+  const lobbyQrcodeContainer = document.getElementById('lobby-qrcode');
+  const lobbyQrUrlEl = document.getElementById('lobby-qr-url');
+
+  // Touch Screen Fallback Elements
+  const btnOpenTouchKiosk = document.getElementById('btn-open-touch-kiosk');
+  const touchKioskModal = document.getElementById('touch-kiosk-modal');
+  const btnCloseTouchModal = document.getElementById('btn-close-touch-modal');
+  const btnGetTicket = document.getElementById('btn-get-ticket');
+  const btnGetPriorityTicket = document.getElementById('btn-get-priority-ticket');
+  
   const ticketModal = document.getElementById('ticket-modal');
   const modalTicketNumber = document.getElementById('modal-ticket-number');
-  const qrcodeContainer = document.getElementById('qrcode');
-  const qrDirectLinkEl = document.getElementById('qr-direct-link');
   const btnCloseModal = document.getElementById('btn-close-modal');
   const modalCountdownEl = document.getElementById('modal-countdown');
   
   let countdownInterval = null;
-  let qrCodeInstance = null;
+  let lobbyQrInstance = null;
 
   // Initialize clock
   function updateClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    clockEl.textContent = `${hours}:${minutes}`;
+    if (clockEl) clockEl.textContent = `${hours}:${minutes}`;
 
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    dateEl.textContent = now.toLocaleDateString('tr-TR', options);
+    if (dateEl) dateEl.textContent = now.toLocaleDateString('tr-TR', options);
   }
   updateClock();
   setInterval(updateClock, 1000);
+
+  // Initialize Main Lobby QR Code pointing to /sira-al
+  async function initLobbyQRCode() {
+    let origin = window.location.origin;
+
+    // If running locally, fetch server LAN Wi-Fi IP so phones can access
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      try {
+        const ipRes = await fetch('/api/server-ip');
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          origin = `http://${ipData.ip}:${ipData.port}`;
+        }
+      } catch (err) {
+        console.warn("Server LAN IP fetch failed:", err);
+      }
+    }
+
+    const mobileKioskUrl = `${origin}/sira-al`;
+
+    if (lobbyQrUrlEl) {
+      lobbyQrUrlEl.textContent = mobileKioskUrl;
+    }
+
+    if (lobbyQrcodeContainer) {
+      lobbyQrcodeContainer.innerHTML = '';
+      try {
+        lobbyQrInstance = new QRCode(lobbyQrcodeContainer, {
+          text: mobileKioskUrl,
+          width: 190,
+          height: 190,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (qrErr) {
+        console.error("Lobby QR generation error:", qrErr);
+      }
+    }
+  }
+
+  initLobbyQRCode();
 
   // Fetch initial stats
   async function fetchStats() {
@@ -45,38 +93,40 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStats();
 
   function updateStatsUI(stats) {
-    waitingCountEl.textContent = stats.totalWaiting;
-    if (stats.callingList && stats.callingList.length > 0) {
-      // Show the last called number
-      lastCalledEl.textContent = stats.callingList[stats.callingList.length - 1].number;
-    } else {
-      lastCalledEl.textContent = "Yok";
+    if (waitingCountEl) waitingCountEl.textContent = stats.totalWaiting;
+    if (lastCalledEl) {
+      if (stats.callingList && stats.callingList.length > 0) {
+        lastCalledEl.textContent = stats.callingList[stats.callingList.length - 1].number;
+      } else {
+        lastCalledEl.textContent = "Yok";
+      }
     }
   }
 
-  // Socket.IO connections (load socket.io library)
+  // Socket.IO connections for live queue sync
   if (typeof io !== 'undefined') {
     const socket = io();
+    socket.on('ticket-created', () => fetchStats());
+    socket.on('ticket-called', () => fetchStats());
+    socket.on('ticket-completed', () => fetchStats());
+    socket.on('queue-reset', () => fetchStats());
+  }
 
-    socket.on('ticket-created', () => {
-      fetchStats();
-    });
-
-    socket.on('ticket-called', () => {
-      fetchStats();
-    });
-
-    socket.on('ticket-completed', () => {
-      fetchStats();
-    });
-
-    socket.on('queue-reset', () => {
-      fetchStats();
+  // Touch Screen Modal Controls
+  if (btnOpenTouchKiosk && touchKioskModal) {
+    btnOpenTouchKiosk.addEventListener('click', () => {
+      touchKioskModal.classList.remove('hidden');
     });
   }
 
-  // Ticket Generation Request Handler
-  async function requestTicket(type = 'standard', btnElement) {
+  if (btnCloseTouchModal && touchKioskModal) {
+    btnCloseTouchModal.addEventListener('click', () => {
+      touchKioskModal.classList.add('hidden');
+    });
+  }
+
+  // Fallback direct ticket issue from touch screen
+  async function requestDirectTicket(type, btnElement) {
     if (btnElement) {
       btnElement.disabled = true;
       btnElement.classList.add('opacity-70');
@@ -95,7 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const ticket = await res.json();
       
-      showTicketModal(ticket);
+      // Close touch selection modal and show ticket number
+      if (touchKioskModal) touchKioskModal.classList.add('hidden');
+      showSuccessModal(ticket);
     } catch (error) {
       alert("Sıra alınırken bir hata oluştu. Lütfen tekrar deneyin.");
       console.error(error);
@@ -107,87 +159,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Get Standard Ticket Click
-  btnGetTicket.addEventListener('click', () => {
-    requestTicket('standard', btnGetTicket);
-  });
-
-  // Get Priority Ticket Click
-  if (btnGetPriorityTicket) {
-    btnGetPriorityTicket.addEventListener('click', () => {
-      requestTicket('priority', btnGetPriorityTicket);
-    });
+  if (btnGetTicket) {
+    btnGetTicket.addEventListener('click', () => requestDirectTicket('standard', btnGetTicket));
   }
 
-  // Modal Functions
-  async function showTicketModal(ticket) {
-    modalTicketNumber.textContent = ticket.number;
-    
-    // Clear old QR code
-    qrcodeContainer.innerHTML = '';
-    
-    // Determine the host for QR code.
-    // If opened via localhost, fetch server LAN IP dynamically so mobile scanning works.
-    let origin = window.location.origin;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      try {
-        const ipRes = await fetch('/api/server-ip');
-        if (ipRes.ok) {
-          const ipData = await ipRes.json();
-          origin = `http://${ipData.ip}:${ipData.port}`;
-        }
-      } catch (ipErr) {
-        console.warn("Server LAN IP fetch failed, using current origin:", ipErr);
-      }
-    }
-    
-    // Generate QR Code containing the tracking URL
-    // Encode ticket.number with encodeURIComponent so non-ASCII characters (e.g. 'Ö') don't crash QRCode.js
-    const safeTicketNo = encodeURIComponent(ticket.number);
-    const trackingUrl = `${origin}/track?no=${safeTicketNo}`;
-    
-    if (qrDirectLinkEl) {
-      qrDirectLinkEl.textContent = `${origin}/track?no=${ticket.number}`;
-    }
+  if (btnGetPriorityTicket) {
+    btnGetPriorityTicket.addEventListener('click', () => requestDirectTicket('priority', btnGetPriorityTicket));
+  }
 
-    try {
-      qrCodeInstance = new QRCode(qrcodeContainer, {
-        text: trackingUrl,
-        width: 175,
-        height: 175,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.M
-      });
-    } catch (qrError) {
-      console.error("QR Code rendering error:", qrError);
-    }
-
-    // Show modal
-    ticketModal.classList.remove('hidden');
+  // Success Modal Functions
+  function showSuccessModal(ticket) {
+    if (modalTicketNumber) modalTicketNumber.textContent = ticket.number;
+    if (ticketModal) ticketModal.classList.remove('hidden');
     
-    // Start countdown for auto-closing (15 seconds for easy phone scanning)
-    let timeLeft = 15;
-    modalCountdownEl.textContent = timeLeft;
+    let timeLeft = 10;
+    if (modalCountdownEl) modalCountdownEl.textContent = timeLeft;
     
     if (countdownInterval) clearInterval(countdownInterval);
     
     countdownInterval = setInterval(() => {
       timeLeft--;
-      modalCountdownEl.textContent = timeLeft;
+      if (modalCountdownEl) modalCountdownEl.textContent = timeLeft;
       if (timeLeft <= 0) {
-        closeModal();
+        closeSuccessModal();
       }
     }, 1000);
   }
 
-  function closeModal() {
-    ticketModal.classList.add('hidden');
+  function closeSuccessModal() {
+    if (ticketModal) ticketModal.classList.add('hidden');
     if (countdownInterval) {
       clearInterval(countdownInterval);
       countdownInterval = null;
     }
   }
 
-  btnCloseModal.addEventListener('click', closeModal);
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', closeSuccessModal);
+  }
 });
