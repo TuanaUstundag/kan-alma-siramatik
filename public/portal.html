@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çalışan Portalı | Kan Alma Sırası Uygulaması</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Siramatik">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2869/2869818.png">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between select-none">
+
+    <!-- Global Header (Controlled by JS, hidden in login screen) -->
+    <header id="portal-header" class="hidden bg-slate-800 text-white shadow-md py-4 px-8 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">MERKEZ LABORATUVARI</h1>
+                <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Kan Alma Arayüz Portalı</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+            <!-- User Info Badge -->
+            <div class="text-right">
+                <div id="header-user-name" class="text-sm font-bold">-</div>
+                <div id="header-user-role" class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">-</div>
+            </div>
+            <!-- Logout Button -->
+            <button id="btn-logout" class="px-3.5 py-1.5 bg-red-650 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition-all flex items-center space-x-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span>Çıkış Yap</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-6 relative">
+        
+        <!-- SECTION 1: Login View -->
+        <div id="login-view" class="bg-white rounded-3xl shadow-xl border border-slate-100 p-10 max-w-md w-full space-y-6">
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center justify-center p-3.5 bg-blue-50 text-blue-600 rounded-2xl mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-800">Çalışan Girişi</h2>
+                <p class="text-slate-500 text-sm">Hemşire veya Yönetici hesabınızla portalınıza giriş yapın.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4" onsubmit="return false;">
+                <!-- Error Alert Box -->
+                <div id="login-error-box" class="hidden bg-red-50 border border-red-100 text-red-650 text-xs rounded-xl p-3 flex items-start space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="login-error-message">Hata mesajı</span>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">E-Posta Adresi</label>
+                    <input id="login-email" type="email" placeholder="isim.soyisim@hastane.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-all font-medium text-slate-700" required>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Şifre</label>
+                    <input id="login-password" type="password" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition-all font-medium text-slate-700" required>
+                </div>
+
+                <button id="btn-login-submit" type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg transition-all active:scale-[0.98] mt-2">
+                    GİRİŞ YAP
+                </button>
+            </form>
+            
+            <div class="text-center text-xs text-slate-400 font-semibold pt-2">
+                Varsayılan Admin Girişi: admin@hastane.com / admin<br>
+                Varsayılan Hemşire Girişi: ayse.hemsire@hastane.com / 123
+            </div>
+        </div>
+
+        <!-- SECTION 2: Nurse Dashboard View -->
+        <div id="nurse-view" class="hidden w-full max-w-5xl space-y-6">
+            
+            <!-- Desk / Room Selection Sub-View (Shows if no room selected) -->
+            <div id="nurse-room-setup" class="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 max-w-md mx-auto text-center space-y-6">
+                <div class="space-y-2">
+                    <h3 class="text-xl font-bold text-slate-800">Çalışma Odası Seçimi</h3>
+                    <p class="text-slate-500 text-sm">Sıra çağrısı yapabilmek için lütfen çalıştığınız oda numarasını seçin.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    <button class="btn-select-room py-4 px-6 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/20 text-slate-700 font-bold rounded-xl text-lg transition-all text-left flex justify-between items-center" data-desk="Kan Alma Odası 1">
+                        <span>Kan Alma Odası 1</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <button class="btn-select-room py-4 px-6 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/20 text-slate-700 font-bold rounded-xl text-lg transition-all text-left flex justify-between items-center" data-desk="Kan Alma Odası 2">
+                        <span>Kan Alma Odası 2</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <button class="btn-select-room py-4 px-6 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/20 text-slate-700 font-bold rounded-xl text-lg transition-all text-left flex justify-between items-center" data-desk="Kan Alma Odası 3">
+                        <span>Kan Alma Odası 3</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Queue Control Dashboard -->
+            <div id="nurse-dashboard" class="hidden grid grid-cols-12 gap-6 items-stretch">
+                <!-- Left panel: Controls -->
+                <div class="col-span-12 md:col-span-7 flex flex-col space-y-6">
+                    <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between space-y-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-slate-400 text-xs font-semibold uppercase">Çalıştığınız Birim</span>
+                                <h2 id="nurse-desk-name" class="text-2xl font-black text-slate-800">-</h2>
+                            </div>
+                            <button id="btn-change-room" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg text-xs transition-all">
+                                Odayı Değiştir
+                            </button>
+                        </div>
+
+                        <!-- Current Call Ticket & Timer -->
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div class="space-y-1">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-slate-400 text-xs font-semibold uppercase">Aktif İşlemdeki Hasta</span>
+                                        <div id="nurse-timer-container" class="hidden inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-full border border-emerald-200 shadow-sm transition-colors">
+                                            <span>⏱️ İşlem Süresi:</span>
+                                            <span id="nurse-timer" class="font-mono text-sm">00:00</span>
+                                        </div>
+                                    </div>
+                                    <div id="nurse-current-patient" class="text-4xl font-extrabold text-blue-600 tracking-wider">-</div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button id="btn-nurse-complete" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none" disabled>
+                                        İşlemi Bitir
+                                    </button>
+                                    <button id="btn-nurse-recall" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none" disabled>
+                                        Tekrar Çağır
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tube Selection and Clinical Tags -->
+                            <div id="nurse-clinical-actions" class="hidden pt-4 border-t border-slate-200/60 space-y-3 text-left">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kan Tüpü Seçimi (Çoklu Seçilebilir)</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" class="btn-tube-tag px-3 py-1.5 rounded-lg text-xs font-bold border transition-all bg-white border-slate-200 text-slate-700 hover:border-red-400 active:scale-95" data-tube="🔴 Biyokimya">🔴 Biyokimya</button>
+                                        <button type="button" class="btn-tube-tag px-3 py-1.5 rounded-lg text-xs font-bold border transition-all bg-white border-slate-200 text-slate-700 hover:border-purple-400 active:scale-95" data-tube="🟣 Hemogram">🟣 Hemogram</button>
+                                        <button type="button" class="btn-tube-tag px-3 py-1.5 rounded-lg text-xs font-bold border transition-all bg-white border-slate-200 text-slate-700 hover:border-yellow-400 active:scale-95" data-tube="🟡 Hormon">🟡 Hormon</button>
+                                        <button type="button" class="btn-tube-tag px-3 py-1.5 rounded-lg text-xs font-bold border transition-all bg-white border-slate-200 text-slate-700 hover:border-blue-400 active:scale-95" data-tube="🔵 Koagülasyon">🔵 Koagülasyon</button>
+                                        <button type="button" class="btn-tube-tag px-3 py-1.5 rounded-lg text-xs font-bold border transition-all bg-white border-slate-200 text-slate-700 hover:border-emerald-400 active:scale-95" data-tube="🟢 Sedim/Diğer">🟢 Sedim / Diğer</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Klinik Durum Notu</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" class="btn-note-tag px-3 py-1 rounded-lg text-xs font-semibold border transition-all bg-white border-slate-200 text-slate-600 hover:border-amber-400 active:scale-95" data-note="Zor Damar">⚠️ Zor Damar</button>
+                                        <button type="button" class="btn-note-tag px-3 py-1 rounded-lg text-xs font-semibold border transition-all bg-white border-slate-200 text-slate-600 hover:border-blue-400 active:scale-95" data-note="Bayılma Riski">💧 Bayılma Riski</button>
+                                        <button type="button" class="btn-note-tag px-3 py-1 rounded-lg text-xs font-semibold border transition-all bg-white border-slate-200 text-slate-600 hover:border-rose-400 active:scale-95" data-note="Hassas / Çocuk">🩸 Hassas Hasta</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Big Call Next Button -->
+                        <button id="btn-nurse-call-next" class="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xl shadow-lg transition-all duration-150 active:scale-[0.98] flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                            <span>SIRADAKİ HASTAYI ÇAĞIR</span>
+                        </button>
+                    </div>
+
+                    <!-- Nurse stats summary -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Bekleyen</span>
+                            <span id="nurse-stat-waiting" class="text-3xl font-black text-slate-800">-</span>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Çağrılan</span>
+                            <span id="nurse-stat-calling" class="text-3xl font-black text-blue-650">-</span>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 text-center">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Tamamlanan</span>
+                            <span id="nurse-stat-completed" class="text-3xl font-black text-emerald-650">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right panel: Waiting List -->
+                <div class="col-span-12 md:col-span-5 bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col overflow-hidden min-h-[300px]">
+                    <div class="pb-3 border-b border-slate-100 mb-4 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 uppercase tracking-wider text-sm flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                            Sıra Bekleyen Hastalar
+                        </h3>
+                        <span id="nurse-badge-waiting-count" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">-</span>
+                    </div>
+
+                    <div id="nurse-queue-list" class="flex-grow overflow-y-auto space-y-2 max-h-[320px] pr-2">
+                        <div class="text-center text-slate-400 text-sm py-8">Bekleyen hasta bulunmuyor.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION 3: Super Admin Dashboard View -->
+        <div id="admin-view" class="hidden w-full max-w-5xl space-y-6">
+            
+            <!-- Tab Navigation Menu -->
+            <nav class="flex space-x-2 border-b border-slate-200 pb-px">
+                <button class="btn-admin-tab border-b-2 border-blue-600 px-5 py-3 text-sm font-bold text-blue-600 focus:outline-none" data-tab="tab-stats">
+                    İşlem İstatistikleri & Canlı Sıra
+                </button>
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-users">
+                    Çalışan (Hemşire) Yönetimi
+                </button>
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-logs">
+                    Sistem Aktivite Logları
+                </button>
+                <button class="btn-admin-tab border-b-2 border-transparent px-5 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none" data-tab="tab-system">
+                    Sistem Kontrolleri
+                </button>
+            </nav>
+
+            <!-- TAB CONTENT AREA -->
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-md p-6">
+                
+                <!-- TAB 1: Stats & Live Queue -->
+                <div id="tab-stats" class="admin-tab-content space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Bekleyen Toplam Hasta</span>
+                            <span id="admin-stat-waiting" class="text-3xl font-black text-slate-800">-</span>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Çağrılan Toplam Hasta</span>
+                            <span id="admin-stat-calling" class="text-3xl font-black text-blue-600">-</span>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Tamamlanan Toplam Hasta</span>
+                            <span id="admin-stat-completed" class="text-3xl font-black text-emerald-600">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Analytics & Charts Section -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                        <!-- Hourly Density Bar Chart -->
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <span>📊 Saatlik Hasta Yoğunluğu</span>
+                                </h4>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">CANLI DAĞILIM</span>
+                            </div>
+                            <!-- Dynamic Chart Container -->
+                            <div id="chart-hourly-bars" class="h-40 flex items-end justify-between gap-2 pt-6 px-2 border-b border-slate-200">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Nurse Workload Share Distribution -->
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <span>👩‍⚕️ Personel İş Yükü Dağılımı</span>
+                                </h4>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TAMAMLANAN ORANI</span>
+                            </div>
+                            <!-- Dynamic Progress Bars -->
+                            <div id="chart-nurse-distribution" class="space-y-3 pt-2">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nurse performance summary table -->
+                    <div class="space-y-3 pt-2">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 text-lg">Çalışan Hasta İşlem Raporları</h3>
+                            <button id="btn-export-stats-csv" class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200 transition-all flex items-center space-x-1.5 shadow-sm active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <span>Raporu Excel / CSV İndir</span>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-100">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-100 text-slate-550 text-xs uppercase tracking-wider font-bold">
+                                        <th class="py-3 px-6">ÇALIŞAN HEMŞİRE</th>
+                                        <th class="py-3 px-6">E-POSTA ADRESİ</th>
+                                        <th class="py-3 px-6 text-center">İŞLEME ALINAN</th>
+                                        <th class="py-3 px-6 text-center">TAMAMLANAN HASTA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-nurse-stats-rows" class="divide-y divide-slate-100 text-sm font-semibold text-slate-700">
+                                    <!-- Rendered dynamically -->
+                                    <tr>
+                                        <td colspan="4" class="py-6 text-center text-slate-400 font-medium">Yükleniyor...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Nurse Management (CRUD) -->
+                <div id="tab-users" class="admin-tab-content hidden grid grid-cols-12 gap-8">
+                    <!-- Left: Add user form -->
+                    <div class="col-span-12 md:col-span-5 bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-slate-800 text-lg">Yeni Çalışan (Hemşire) Ekle</h3>
+                        <form id="form-add-nurse" onsubmit="return false;" class="space-y-3">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-500 uppercase">Ad Soyad</label>
+                                <input id="add-nurse-name" type="text" placeholder="Hemşire Fatma" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-500 uppercase">E-Posta</label>
+                                <input id="add-nurse-email" type="email" placeholder="fatma.hemsire@hastane.com" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-500 uppercase">Giriş Şifresi</label>
+                                <input id="add-nurse-password" type="text" placeholder="sifre123" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" required>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm shadow-md transition-all active:scale-[0.98]">
+                                ÇALIŞAN KAYDET
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Right: Users list -->
+                    <div class="col-span-12 md:col-span-7 space-y-4">
+                        <h3 class="font-bold text-slate-800 text-lg">Kayıtlı Çalışan Listesi</h3>
+                        <div class="overflow-x-auto rounded-xl border border-slate-100">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-100 text-slate-550 text-xs uppercase tracking-wider font-bold">
+                                        <th class="py-3 px-6">AD SOYAD</th>
+                                        <th class="py-3 px-6">E-POSTA ADRESİ</th>
+                                        <th class="py-3 px-6">ROL</th>
+                                        <th class="py-3 px-6 text-right">İŞLEMLER</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-users-rows" class="divide-y divide-slate-100 font-semibold text-slate-700">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Activity Logs -->
+                <div id="tab-logs" class="admin-tab-content hidden space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Tarihsel İşlem Günlüğü (Loglar)
+                        </h3>
+                        <button id="btn-export-logs-csv" class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-lg border border-blue-200 transition-all flex items-center space-x-1.5 shadow-sm active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <span>Logları Excel / CSV İndir</span>
+                        </button>
+                    </div>
+                    
+                    <div class="border border-slate-100 rounded-xl overflow-hidden">
+                        <div class="max-h-[380px] overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="sticky top-0 bg-slate-50 border-b border-slate-100 text-slate-550 text-xs uppercase tracking-wider font-bold">
+                                    <tr>
+                                        <th class="py-3 px-6">TARİH / SAAT</th>
+                                        <th class="py-3 px-6">ÇALIŞAN</th>
+                                        <th class="py-3 px-6">E-POSTA</th>
+                                        <th class="py-3 px-6">EYLEM</th>
+                                        <th class="py-3 px-6">SIRA NO</th>
+                                        <th class="py-3 px-6">ODA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-logs-rows" class="divide-y divide-slate-100 font-medium text-slate-600">
+                                    <!-- Rendered dynamically -->
+                                    <tr>
+                                        <td colspan="6" class="py-6 text-center text-slate-400 font-medium">İşlem kaydı bulunmuyor.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: System controls -->
+                <div id="tab-system" class="admin-tab-content hidden space-y-6 max-w-md">
+                    <div class="bg-red-50 border border-red-100 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-red-800 text-lg">Sıra & Kayıtları Sıfırla</h3>
+                        <p class="text-red-700 text-sm font-medium">
+                            Bu işlem veri tabanındaki tüm günlük biletleri, bekleyen sıraları ve hemşire çağrı geçmişini (logları) kalıcı olarak siler. Sıra numaralarını K-101'e geri alır.
+                        </p>
+                        <button id="btn-admin-reset" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all active:scale-[0.98]">
+                            Verileri Kalıcı Olarak Sıfırla
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 py-3 text-center border-t border-slate-200 text-xs text-slate-400 font-medium">
+        Hastane Sıra Otomasyon Portalı
+    </footer>
+
+    <!-- Socket.io and Portal JS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/portal.js"></script>
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg.scope))
+            .catch(err => console.error('Service Worker registration failed:', err));
+        });
+      }
+    </script>
+</body>
+</html>

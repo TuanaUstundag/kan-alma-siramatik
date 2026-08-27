@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sıra Alma Kiosku | Kan Alma Sırası Uygulaması</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Siramatik">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2869/2869818.png">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code JS Library -->
+    <script src="/assets/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md py-6 px-8 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+            <!-- Hospital Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <div>
+                <h1 class="text-2xl font-bold tracking-wide">MERKEZ LABORATUVARI</h1>
+                <p class="text-xs text-blue-200 uppercase tracking-widest font-semibold">Kan Alma Ünitesi Sıra Matik</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <div id="clock" class="text-2xl font-bold">12:00</div>
+            <div id="date" class="text-xs text-blue-200">25 Ağustos 2026</div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4 relative">
+        <!-- Main Panel -->
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-12 max-w-lg w-full text-center space-y-8 relative">
+            <div class="space-y-3">
+                <h2 class="text-3xl font-extrabold text-slate-800">Hoş Geldiniz</h2>
+                <p class="text-slate-500 text-sm">Kan verme sıranızı almak için aşağıdaki butona basınız.</p>
+            </div>
+
+            <!-- Ticket Action Buttons (Dual: Standard & Priority) -->
+            <div class="space-y-4">
+                <!-- Standard Ticket Button -->
+                <button id="btn-get-ticket" class="w-full py-5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-bold shadow-lg transition-all duration-150 flex items-center justify-center space-x-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xl font-extrabold tracking-wide">STANDART SIRA AL</div>
+                        <div class="text-xs text-blue-100 font-medium">Genel Kan Alma Sırası</div>
+                    </div>
+                </button>
+
+                <!-- Priority Ticket Button -->
+                <button id="btn-get-priority-ticket" class="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 active:scale-[0.98] text-white rounded-2xl font-bold shadow-lg transition-all duration-150 flex items-center justify-center space-x-4 border border-amber-300/30">
+                    <span class="text-3xl">♿</span>
+                    <div class="text-left">
+                        <div class="text-lg font-black tracking-wide flex items-center space-x-2">
+                            <span>ÖNCELİKLİ SIRA AL</span>
+                            <span class="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Öncelikli</span>
+                        </div>
+                        <div class="text-xs text-amber-50 font-medium">65+ Yaş, Hamile, Engelli, Gazi</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Queue info -->
+            <div class="pt-4 border-t border-slate-100 flex justify-around text-slate-600 text-sm">
+                <div>
+                    <span class="block text-slate-400 text-xs font-semibold uppercase">Bekleyen Hasta</span>
+                    <span id="waiting-count" class="text-xl font-bold text-slate-800">-</span>
+                </div>
+                <div class="border-r border-slate-100"></div>
+                <div>
+                    <span class="block text-slate-400 text-xs font-semibold uppercase">Son Çağrılan</span>
+                    <span id="last-called" class="text-xl font-bold text-slate-800">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Modal Overlay -->
+        <div id="ticket-modal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center space-y-6 transform scale-95 transition-all">
+                <div class="space-y-2">
+                    <span class="inline-flex items-center justify-center p-2 bg-emerald-50 text-emerald-600 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <h3 class="text-xl font-bold text-slate-800">Sıra Numaranız Alındı</h3>
+                </div>
+
+                <!-- Number Display -->
+                <div class="bg-slate-50 py-4 px-6 rounded-2xl border border-slate-100">
+                    <span class="block text-slate-400 text-xs font-semibold uppercase">SIRA NUMARANIZ</span>
+                    <span id="modal-ticket-number" class="text-5xl font-black text-blue-600 tracking-wider">K-101</span>
+                </div>
+
+                <!-- QR Code container -->
+                <div class="flex flex-col items-center space-y-3">
+                    <div class="p-3 bg-white border-2 border-slate-900 rounded-2xl shadow-md inline-block">
+                        <div id="qrcode" class="flex items-center justify-center"></div>
+                    </div>
+                    <div id="qr-direct-link" class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 break-all select-all"></div>
+                    <p class="text-slate-500 text-xs leading-relaxed max-w-[250px]">
+                        Telefon kameranızla QR kodu okutabilir veya yukarıdaki bağlantıdan sıranızı takip edebilirsiniz.
+                    </p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex flex-col space-y-2">
+                    <button id="btn-close-modal" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-sm transition-all duration-150">
+                        Kapat (<span id="modal-countdown">7</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 py-4 text-center border-t border-slate-200">
+        <p class="text-xs text-slate-400 font-medium">© 2026 Hastane Bilgi İşlem Direktörlüğü. Tüm Hakları Saklıdır.</p>
+    </footer>
+
+    <!-- Socket.io Client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Kiosk Javascript logic -->
+    <script src="/js/kiosk.js"></script>
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg.scope))
+            .catch(err => console.error('Service Worker registration failed:', err));
+        });
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "kan-alma-sirasi-uygulamasi",
+  "version": "1.0.0",
+  "description": "Kan alma sırası yönetim uygulaması (QR kod ve sesli bildirim destekli)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "queue",
+    "hospital",
+    "qr-code",
+    "socket.io",
+    "express"
+  ],
+  "author": "IT Stajyer",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

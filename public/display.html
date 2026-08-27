@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bekleme Salonu Ekranı | Kan Alma Sırası Uygulaması</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes flash-active {
+            0%, 100% { border-color: #ef4444; background-color: #fef2f2; }
+            50% { border-color: #3b82f6; background-color: #eff6ff; }
+        }
+        .active-call-flash {
+            animation: flash-active 1s 5; /* Flash 5 times when called */
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800 border-b border-slate-700 py-5 px-10 flex justify-between items-center">
+        <div class="flex items-center space-x-5">
+            <!-- Hospital Logo -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <div>
+                <h1 class="text-3xl font-black tracking-wide text-white">MERKEZ LABORATUVARI</h1>
+                <p class="text-sm text-slate-400 uppercase tracking-widest font-bold">KAN ALMA BÖLÜMÜ SIRAMATİK EKRANI</p>
+            </div>
+        </div>
+        
+        <!-- Audio Consent Banner for TV (Needs to be clicked once to start sound) -->
+        <div id="audio-consent-tv" class="bg-amber-600 text-white text-sm font-semibold py-2.5 px-5 rounded-xl shadow-md cursor-pointer hover:bg-amber-700 animate-pulse flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <span>Sesli Anons Sistemini Başlatmak İçin Buraya Tıklayınız</span>
+        </div>
+
+        <div class="text-right">
+            <div id="clock" class="text-3xl font-black text-blue-400">12:00:00</div>
+            <div id="date" class="text-sm text-slate-400 font-semibold">25 Ağustos 2026</div>
+        </div>
+    </header>
+
+    <!-- Main Grid Content -->
+    <main class="flex-grow grid grid-cols-12 gap-8 p-8 items-stretch">
+        
+        <!-- Left Side: Active Call Box (Big Screen) -->
+        <section class="col-span-7 flex flex-col justify-between bg-slate-800 rounded-3xl border border-slate-700 p-8 shadow-2xl relative">
+            <div class="text-center py-4 border-b border-slate-700">
+                <span class="text-slate-400 text-sm font-bold uppercase tracking-widest">Şu An Çağrılan</span>
+            </div>
+            
+            <!-- Giant Number & Room Board -->
+            <div id="main-display-box" class="flex-grow flex flex-col items-center justify-center py-10 space-y-8 rounded-2xl border-4 border-transparent transition-all duration-300">
+                <!-- Large Ticket Code -->
+                <div id="main-ticket" class="text-[9rem] font-black leading-none text-blue-500 tracking-wider transition-all duration-200">
+                    -
+                </div>
+                <!-- Patient Name -->
+                <div id="main-patient-name" class="text-4xl font-bold text-emerald-400 tracking-wide transition-all duration-200 min-h-[40px]">
+                    
+                </div>
+                <!-- Large Destination Desk -->
+                <div id="main-desk" class="text-5xl font-extrabold text-white tracking-wide transition-all duration-200">
+                    Sıra Bekleniyor
+                </div>
+            </div>
+
+            <!-- Hint indicator -->
+            <div class="text-center pt-4 border-t border-slate-700">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                    Sırası gelen hastalarımızın ilgili kan alma odasına geçmesi rica olunur.
+                </p>
+            </div>
+        </section>
+
+        <!-- Right Side: Called History List -->
+        <section class="col-span-5 bg-slate-800 rounded-3xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-slate-750 px-8 py-5 border-b border-slate-700 flex justify-between items-center">
+                <h2 class="text-xl font-bold tracking-wider uppercase text-slate-300">Son Çağrılanlar</h2>
+                <span class="px-3 py-1 bg-slate-700 text-xs font-semibold rounded-md text-slate-400">GEÇMİŞ</span>
+            </div>
+
+            <!-- History List Table -->
+            <div class="flex-grow overflow-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-900/50 border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider font-bold">
+                            <th class="py-4 px-8">SIRA NO</th>
+                            <th class="py-4 px-8 text-right">KAN ALMA ODASI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-rows" class="divide-y divide-slate-700/50 text-2xl font-bold">
+                        <!-- History rows will go here dynamically -->
+                        <tr>
+                            <td class="py-6 px-8 text-slate-400">-</td>
+                            <td class="py-6 px-8 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-6 px-8 text-slate-400">-</td>
+                            <td class="py-6 px-8 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-6 px-8 text-slate-400">-</td>
+                            <td class="py-6 px-8 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-6 px-8 text-slate-400">-</td>
+                            <td class="py-6 px-8 text-right text-slate-400">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Ticker (News Style Ticker) -->
+    <footer class="bg-blue-700 py-3 overflow-hidden border-t border-blue-600 relative">
+        <div class="flex whitespace-nowrap animate-[marquee_25s_linear_infinite]">
+            <p class="text-lg font-bold uppercase tracking-wider text-blue-100 flex items-center space-x-12">
+                <span>🏥 DEĞERLİ HASTALARIMIZ, KAN ALMA İŞLEMİ İÇİN BİLETİNİZDE YAZAN SIRA NUMARANIZI TAKİP EDİNİZ.</span>
+                <span class="text-blue-300">•</span>
+                <span>📱 BİLETİNİZDEKİ QR KODU CEP TELEFONUNUZDAN OKUTARAK SIRANIZI HASTANE BİNANIN HER YERİNDEN CANLI TAKİP EDEBİLİRSİNİZ.</span>
+                <span class="text-blue-300">•</span>
+                <span>💉 KAN VERMEDEN ÖNCE LÜTFEN KİMLİĞİNİZİ HAZIRLAYINIZ. GEÇMİŞ OLSUN DİLERİZ.</span>
+            </p>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-\[marquee_25s_linear_infinite\] {
+            animation: marquee 30s linear infinite;
+        }
+    </style>
+
+    <!-- Socket.io and Display JS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/display.js"></script>
+</body>
+</html>
