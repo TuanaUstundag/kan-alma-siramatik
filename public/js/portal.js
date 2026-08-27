@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Socket Connection setup
+  let syncInterval = null;
   function initSocket() {
     if (!socket) {
       socket = io();
@@ -134,6 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
           fetchStats();
         }
       });
+    }
+
+    if (!syncInterval) {
+      syncInterval = setInterval(handleRealtimeUpdate, 3000);
     }
   }
 

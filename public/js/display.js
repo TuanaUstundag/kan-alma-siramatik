@@ -135,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const waitingTicketsContainer = document.getElementById('waiting-tickets-container');
+  const tvWaitingBadge = document.getElementById('tv-waiting-badge');
+
   // Fetch initial data
   async function refreshDisplay() {
     try {
@@ -146,8 +149,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   refreshDisplay();
+  // Auto-sync polling every 3 seconds for 100% reliable real-time updates across mobile networks
+  setInterval(refreshDisplay, 3000);
 
   function updateUI(stats) {
+    // 1. Update Sırada Bekleyenler (Live Waiting Queue)
+    if (tvWaitingBadge) {
+      tvWaitingBadge.textContent = `${stats.totalWaiting || 0} Hasta`;
+    }
+
+    if (waitingTicketsContainer) {
+      waitingTicketsContainer.innerHTML = '';
+      if (stats.waitingList && stats.waitingList.length > 0) {
+        stats.waitingList.forEach(item => {
+          const isPriority = item.type === 'priority' || (item.number && item.number.startsWith('Ö-'));
+          const pill = document.createElement('div');
+          if (isPriority) {
+            pill.className = "px-3.5 py-1.5 bg-gradient-to-r from-amber-500/30 to-rose-500/30 text-amber-300 border border-amber-400/60 rounded-xl font-black text-lg shadow-md flex items-center space-x-1.5 animate-pulse";
+            pill.innerHTML = `<span class="text-sm">♿</span><span>${item.number}</span>`;
+          } else {
+            pill.className = "px-3.5 py-1.5 bg-blue-500/20 text-blue-300 border border-blue-400/40 rounded-xl font-black text-lg shadow-sm";
+            pill.textContent = item.number;
+          }
+          waitingTicketsContainer.appendChild(pill);
+        });
+      } else {
+        waitingTicketsContainer.innerHTML = '<span class="text-slate-500 text-sm italic py-2">Sırada bekleyen hasta bulunmuyor.</span>';
+      }
+    }
+
+    // 2. Update Active Call & History
     const history = stats.calledHistory || [];
     
     if (history.length > 0) {
@@ -163,24 +194,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const historyItems = history.slice(1);
       historyRows.innerHTML = '';
       
-      // Pad history rows to keep exactly 4 slots
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         const item = historyItems[i];
         const row = document.createElement('tr');
         row.className = "border-b border-slate-700/50 hover:bg-slate-750 transition-colors";
         
         if (item) {
           row.innerHTML = `
-            <td class="py-5 px-8 text-blue-400 font-bold">
+            <td class="py-4 px-6 text-blue-400 font-bold text-xl">
               ${item.number} 
-              <span class="text-slate-400 text-lg font-medium block md:inline md:ml-3">(${item.patientName || "Misafir Hasta"})</span>
+              <span class="text-slate-400 text-base font-medium block md:inline md:ml-2">(${item.patientName || "Misafir Hasta"})</span>
             </td>
-            <td class="py-5 px-8 text-right text-white font-medium">${item.desk}</td>
+            <td class="py-4 px-6 text-right text-white font-medium text-lg">${item.desk}</td>
           `;
         } else {
           row.innerHTML = `
-            <td class="py-5 px-8 text-slate-600 font-bold">-</td>
-            <td class="py-5 px-8 text-right text-slate-600 font-medium">-</td>
+            <td class="py-4 px-6 text-slate-600 font-bold">-</td>
+            <td class="py-4 px-6 text-right text-slate-600 font-medium">-</td>
           `;
         }
         historyRows.appendChild(row);
@@ -193,10 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
       mainTicketEl.classList.remove('text-blue-500');
       
       // Empty history table
-      historyRows.innerHTML = Array(4).fill(0).map(() => `
+      historyRows.innerHTML = Array(3).fill(0).map(() => `
         <tr class="border-b border-slate-700/50">
-          <td class="py-5 px-8 text-slate-600 font-bold">-</td>
-          <td class="py-5 px-8 text-right text-slate-600 font-medium">-</td>
+          <td class="py-4 px-6 text-slate-600 font-bold">-</td>
+          <td class="py-4 px-6 text-right text-slate-600 font-medium">-</td>
         </tr>
       `).join('');
     }
