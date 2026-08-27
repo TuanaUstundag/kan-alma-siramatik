@@ -2,12 +2,16 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const ticketNumber = urlParams.get('no') ? urlParams.get('no').toUpperCase().trim() : null;
+  const ticketNumber = urlParams.get('no') ? decodeURIComponent(urlParams.get('no')).toUpperCase().trim() : null;
 
   // Elements
   const trackingCard = document.getElementById('tracking-card');
   const errorCard = document.getElementById('error-card');
   const ticketNumberEl = document.getElementById('ticket-number');
+  const trackPatientNameEl = document.getElementById('track-patient-name');
+  const trackTicketTypeBadge = document.getElementById('track-ticket-type-badge');
+  const preCallAlert = document.getElementById('pre-call-alert');
+  const estimatedWaitTimeEl = document.getElementById('estimated-wait-time');
   
   const statusCard = document.getElementById('status-card');
   const statusIcon = document.getElementById('status-icon');
@@ -23,7 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const callingModalDesk = document.getElementById('calling-modal-desk');
   const btnAckCalling = document.getElementById('btn-ack-calling');
 
-  // Web Audio Context for generating notification sounds
+  // Feedback Elements
+  const feedbackCard = document.getElementById('feedback-card');
+  const feedbackCommentInput = document.getElementById('feedback-comment');
+  const btnSubmitFeedback = document.getElementById('btn-submit-feedback');
+  const feedbackThankyou = document.getElementById('feedback-thankyou');
+  const starButtons = document.querySelectorAll('.star-btn');
+  let selectedRating = 5;
+  let preAlertTriggered = false;
+
+  // Web Audio Context
   let audioCtx = null;
 
   function checkBannerVisibility() {
@@ -31,14 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasAudioCtx = audioCtx !== null;
     
     if (hasNotificationPermission && hasAudioCtx) {
-      consentBanner.classList.add('hidden');
+      if (consentBanner) consentBanner.classList.add('hidden');
     }
   }
 
   function initAudio() {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      console.log("Audio Context initialized successfully.");
     }
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
@@ -46,11 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBannerVisibility();
   }
 
-  // Trigger audio initialization on user interaction
   document.body.addEventListener('click', initAudio);
   document.body.addEventListener('touchstart', initAudio);
 
-  // Allow permissions button click logic
   if (btnAllowPermissions) {
     btnAllowPermissions.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -59,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if ('Notification' in window) {
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
-            console.log("Notification permission granted.");
             new Notification("Bildirimler Aktif Edildi", {
               body: "Sıranız geldiğinde ekran arka planda olsa dahi bildirim alacaksınız.",
               tag: "sira-test"
@@ -74,18 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sound generator
   function playAlarm() {
     if (!audioCtx) return;
-    
     const now = audioCtx.currentTime;
     
-    // Play a series of 3 alert tones
     for (let i = 0; i < 3; i++) {
       const startTime = now + (i * 0.35);
-      
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, startTime); // A5 note
+      osc.frequency.setValueAtTime(880, startTime);
       
       gain.gain.setValueAtTime(0, startTime);
       gain.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
@@ -99,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Check if we have a ticket number
   if (!ticketNumber) {
     showError();
     return;
@@ -107,11 +112,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ticketNumberEl.textContent = ticketNumber;
 
+  // Star Rating Click Logic
+  starButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedRating = parseInt(btn.getAttribute('data-star'), 10) || 5;
+      updateStarsUI(selectedRating);
+    });
+  });
+
+  function updateStarsUI(rating) {
+    starButtons.forEach(btn => {
+      const starVal = parseInt(btn.getAttribute('data-star'), 10);
+      if (starVal <= rating) {
+        btn.classList.add('text-amber-400');
+        btn.classList.remove('text-slate-300');
+      } else {
+        btn.classList.remove('text-amber-400');
+        btn.classList.add('text-slate-300');
+      }
+    });
+  }
+
+  if (btnSubmitFeedback) {
+    btnSubmitFeedback.addEventListener('click', async () => {
+      btnSubmitFeedback.disabled = true;
+      btnSubmitFeedback.textContent = "Gönderiliyor...";
+      const comment = feedbackCommentInput ? feedbackCommentInput.value.trim() : "";
+      
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number: ticketNumber, rating: selectedRating, comment })
+        });
+        if (feedbackThankyou) feedbackThankyou.classList.remove('hidden');
+        btnSubmitFeedback.classList.add('hidden');
+        if (feedbackCommentInput) feedbackCommentInput.classList.add('hidden');
+      } catch (err) {
+        console.error("Feedback submit error:", err);
+      }
+    });
+  }
+
   // Fetch ticket details & stats
   async function refreshData() {
     try {
-      // 1. Fetch individual ticket info
-      const ticketRes = await fetch(`/api/ticket/${ticketNumber}`);
+      const ticketRes = await fetch(`/api/ticket/${encodeURIComponent(ticketNumber)}`);
       if (!ticketRes.ok) {
         showError();
         return;
@@ -119,12 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const ticket = await ticketRes.json();
       updateTicketUI(ticket);
 
-      // 2. Fetch general stats for "Yanan Sıra"
       const statsRes = await fetch('/api/stats');
       const stats = await statsRes.json();
       
       if (stats.callingList && stats.callingList.length > 0) {
-        // Show the most recently called ticket
         currentCalledNumberEl.textContent = stats.callingList[stats.callingList.length - 1].number;
       } else {
         currentCalledNumberEl.textContent = "-";
@@ -136,51 +180,103 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateTicketUI(ticket) {
+    // Patient Name & Priority Badge
+    if (trackPatientNameEl) {
+      trackPatientNameEl.textContent = ticket.patientName && ticket.patientName !== "Misafir Hasta" 
+        ? `Sayın ${ticket.patientName}` 
+        : "Sayın Misafirimiz";
+    }
+
+    const isPriority = ticket.type === 'priority' || ticket.number.startsWith('Ö-');
+    if (trackTicketTypeBadge) {
+      if (isPriority) {
+        trackTicketTypeBadge.classList.remove('hidden');
+      } else {
+        trackTicketTypeBadge.classList.add('hidden');
+      }
+    }
+
     // Waiting Count
     waitingBeforeEl.textContent = ticket.waitingBefore;
 
+    // Dynamic Estimated Wait Time calculation (~3 mins per patient ahead)
+    if (estimatedWaitTimeEl) {
+      if (ticket.status === 'waiting') {
+        const estMin = Math.max(1, (ticket.waitingBefore || 0) * 3);
+        estimatedWaitTimeEl.textContent = `~${estMin} dk`;
+      } else if (ticket.status === 'calling') {
+        estimatedWaitTimeEl.textContent = "Şimdi!";
+      } else {
+        estimatedWaitTimeEl.textContent = "-";
+      }
+    }
+
+    // Pre-call Early Warning Alert (When 1-2 people ahead)
+    if (preCallAlert) {
+      if (ticket.status === 'waiting' && ticket.waitingBefore > 0 && ticket.waitingBefore <= 2) {
+        preCallAlert.classList.remove('hidden');
+        if (!preAlertTriggered) {
+          preAlertTriggered = true;
+          if (navigator.vibrate) navigator.vibrate([150, 75, 150]);
+        }
+      } else {
+        preCallAlert.classList.add('hidden');
+      }
+    }
+
     // Status UI changes
     if (ticket.status === 'waiting') {
-      // Reset status card to blue info mode
-      statusCard.className = "bg-blue-50 border border-blue-100 rounded-2xl p-6 text-center space-y-3";
+      statusCard.className = "bg-blue-50 border border-blue-100 rounded-2xl p-5 text-center space-y-2.5";
       statusIcon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2" />
         </svg>`;
-      statusTitle.className = "text-lg font-bold text-blue-900";
+      statusTitle.className = "text-base font-bold text-blue-900";
       statusTitle.textContent = "Sıranız Beklemede";
-      statusDesc.className = "text-sm text-blue-700 font-medium";
-      statusDesc.textContent = `Önünüzde ${ticket.waitingBefore} kişi bulunuyor. Lütfen bekleyiniz.`;
+      statusDesc.className = "text-xs text-blue-700 font-medium";
+      statusDesc.textContent = `Önünüzde ${ticket.waitingBefore} kişi bulunuyor. Sıranız gelene kadar bekleyiniz.`;
       
       callingModal.classList.add('hidden');
+      if (feedbackCard) feedbackCard.classList.add('hidden');
     } 
     else if (ticket.status === 'calling') {
-      // Set status card to emerald flashing mode
-      statusCard.className = "animate-pulse-green border border-emerald-500 rounded-2xl p-6 text-center space-y-3 text-white";
+      statusCard.className = "bg-gradient-to-r from-emerald-500 to-green-600 border border-emerald-400 rounded-2xl p-5 text-center space-y-2 text-white shadow-lg animate-pulse";
       statusIcon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>`;
-      statusTitle.className = "text-xl font-black";
+      statusTitle.className = "text-lg font-black";
       statusTitle.textContent = "SIRANIZ GELDİ!";
-      statusDesc.className = "text-sm font-semibold";
+      statusDesc.className = "text-xs font-semibold text-emerald-100";
       statusDesc.textContent = `Lütfen hemen ${ticket.desk} ünitesine geçiniz.`;
 
-      // Trigger alerts if not already acknowledged
       showCallingModal(ticket.desk);
+      if (feedbackCard) feedbackCard.classList.add('hidden');
     } 
     else if (ticket.status === 'completed') {
-      // Set status card to gray completed mode
-      statusCard.className = "bg-slate-100 border border-slate-200 rounded-2xl p-6 text-center space-y-3 text-slate-500";
+      statusCard.className = "bg-slate-100 border border-slate-200 rounded-2xl p-5 text-center space-y-2 text-slate-600";
       statusIcon.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>`;
-      statusTitle.className = "text-lg font-bold text-slate-700";
+      statusTitle.className = "text-base font-bold text-slate-800";
       statusTitle.textContent = "İşleminiz Tamamlandı";
-      statusDesc.className = "text-sm font-medium text-slate-500";
-      statusDesc.textContent = "Kan alma işleminiz bitti. Geçmiş olsun dileriz.";
+      statusDesc.className = "text-xs font-medium text-slate-500";
+      statusDesc.textContent = "Kan alma işleminiz bitti. Sağlıklı günler dileriz.";
       
+      callingModal.classList.add('hidden');
+      if (feedbackCard) feedbackCard.classList.remove('hidden');
+    }
+    else if (ticket.status === 'noshow') {
+      statusCard.className = "bg-rose-50 border border-rose-200 rounded-2xl p-5 text-center space-y-2 text-rose-700";
+      statusIcon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>`;
+      statusTitle.className = "text-base font-bold text-rose-900";
+      statusTitle.textContent = "Çağrıya Cevap Verilmedi";
+      statusDesc.className = "text-xs font-medium text-rose-600";
+      statusDesc.textContent = "Sıranız çağrıldı ancak odaya gelinmediği için pas geçildi. Lütfen görevli danışmaya başvurunuz.";
       callingModal.classList.add('hidden');
     }
   }
@@ -189,16 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
     callingModalDesk.textContent = desk;
     if (callingModal.classList.contains('hidden')) {
       callingModal.classList.remove('hidden');
-      
-      // Play Sound
       playAlarm();
       
-      // Vibrate on mobile devices (200ms vibe, 100ms pause, 200ms vibe)
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 200]);
       }
 
-      // Send System Level Notification (even if minimized / background)
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification("Sıranız Geldi!", {
           body: `Lütfen hemen ${desk} birimine geçiniz. (Bilet No: ${ticketNumber})`,
@@ -214,33 +306,28 @@ document.addEventListener('DOMContentLoaded', () => {
     errorCard.classList.remove('hidden');
   }
 
-  // Load initial data
   refreshData();
+  // Auto-sync polling every 3 seconds for continuous live connectivity
+  setInterval(refreshData, 3000);
 
   // Socket.IO real-time binding
-  const socket = io();
+  if (typeof io !== 'undefined') {
+    const socket = io();
+    socket.emit('track-ticket', ticketNumber);
 
-  // Subscribe to tracking events for this specific ticket
-  socket.emit('track-ticket', ticketNumber);
+    socket.on('your-turn', (data) => {
+      refreshData();
+      showCallingModal(data.desk || data.ticket.desk);
+    });
 
-  // Triggered when called specifically
-  socket.on('your-turn', (data) => {
-    refreshData();
-    showCallingModal(data.desk || data.ticket.desk);
-  });
+    socket.on('ticket-created', refreshData);
+    socket.on('ticket-called', refreshData);
+    socket.on('ticket-completed', refreshData);
+    socket.on('queue-reset', showError);
+  }
 
-  // Triggered when anything updates (re-calculate positions and called numbers)
-  socket.on('ticket-created', refreshData);
-  socket.on('ticket-called', refreshData);
-  socket.on('ticket-completed', refreshData);
-
-  socket.on('queue-reset', () => {
-    showError();
-  });
-
-  // Acknowledge calling notification modal
   btnAckCalling.addEventListener('click', () => {
     callingModal.classList.add('hidden');
-    initAudio(); // Initialize audio context if not already done
+    initAudio();
   });
 });

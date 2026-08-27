@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnNurseCallNext = document.getElementById('btn-nurse-call-next');
   const btnNurseRecall = document.getElementById('btn-nurse-recall');
   const btnNurseComplete = document.getElementById('btn-nurse-complete');
+  const btnNurseNoshow = document.getElementById('btn-nurse-noshow');
 
   // Nurse Stats elements
   const nurseStatWaiting = document.getElementById('nurse-stat-waiting');
@@ -50,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminStatWaiting = document.getElementById('admin-stat-waiting');
   const adminStatCalling = document.getElementById('admin-stat-calling');
   const adminStatCompleted = document.getElementById('admin-stat-completed');
+  const adminStatRating = document.getElementById('admin-stat-rating');
   const tableNurseStatsRows = document.getElementById('table-nurse-stats-rows');
 
   // Admin User CRUD Elements
@@ -330,12 +332,14 @@ document.addEventListener('DOMContentLoaded', () => {
         nurseCurrentPatient.textContent = `${activeCall.number} (${activeCall.patientName || "Misafir Hasta"})`;
         btnNurseComplete.disabled = false;
         btnNurseRecall.disabled = false;
+        if (btnNurseNoshow) btnNurseNoshow.disabled = false;
         if (nurseClinicalActions) nurseClinicalActions.classList.remove('hidden');
       } else {
         activeCallingPatient = null;
         nurseCurrentPatient.textContent = "-";
         btnNurseComplete.disabled = true;
         btnNurseRecall.disabled = true;
+        if (btnNurseNoshow) btnNurseNoshow.disabled = true;
         stopNurseTimer();
         if (nurseClinicalActions) nurseClinicalActions.classList.add('hidden');
         selectedTubes = [];
@@ -470,6 +474,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  if (btnNurseNoshow) {
+    btnNurseNoshow.addEventListener('click', async () => {
+      if (!activeCallingPatient || !currentUser) return;
+      if (!confirm(`${activeCallingPatient} numaralı hasta çağrıya cevap vermedi (Gelmedi) olarak işaretlensin mi?`)) return;
+
+      btnNurseNoshow.disabled = true;
+      try {
+        const res = await fetch('/api/noshow', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-email': currentUser.email
+          },
+          body: JSON.stringify({ number: activeCallingPatient })
+        });
+        if (res.ok) {
+          stopNurseTimer();
+          activeCallingPatient = null;
+          selectedTubes = [];
+          selectedNotes = [];
+          resetClinicalButtons();
+          fetchNurseStats();
+        } else {
+          alert("İşlem kaydedilemedi.");
+        }
+      } catch (err) {
+        console.error("No show error:", err);
+      } finally {
+        btnNurseNoshow.disabled = false;
+      }
+    });
+  }
+
 
   // --- ADMIN VIEW LOGIC ---
   function renderAdminDashboard() {
@@ -521,6 +558,9 @@ document.addEventListener('DOMContentLoaded', () => {
       adminStatWaiting.textContent = stats.totalWaiting;
       adminStatCalling.textContent = stats.totalCalling;
       adminStatCompleted.textContent = stats.totalCompleted;
+      if (adminStatRating) {
+        adminStatRating.textContent = stats.averageRating ? `${stats.averageRating} ★` : "5.0 ★";
+      }
 
       // Render Hourly Density Bars Chart
       if (chartHourlyBars) {

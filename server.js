@@ -193,6 +193,36 @@ app.post('/api/complete', (req, res) => {
   res.json(ticket);
 });
 
+// Mark patient as No-Show / Pas Geç (called from portal nurse panel)
+app.post('/api/noshow', (req, res) => {
+  const { number } = req.body || {};
+  const userEmail = getRequesterEmail(req);
+
+  if (!number) {
+    return res.status(400).json({ error: 'Number parameter is required' });
+  }
+
+  const ticket = Database.noShow(number, userEmail);
+  if (!ticket) {
+    return res.status(404).json({ error: 'Ticket not found' });
+  }
+
+  io.emit('ticket-completed', ticket);
+  res.json(ticket);
+});
+
+// Patient Satisfaction Feedback (called from track screen)
+app.post('/api/feedback', (req, res) => {
+  const { number, rating, comment } = req.body || {};
+  if (!number || !rating) {
+    return res.status(400).json({ error: 'Number and rating are required' });
+  }
+
+  const feedback = Database.submitFeedback(number, rating, comment);
+  io.emit('feedback-submitted', feedback);
+  res.json(feedback);
+});
+
 // Reset the entire queue (called from portal admin dashboard)
 app.post('/api/reset', (req, res) => {
   const userEmail = getRequesterEmail(req);

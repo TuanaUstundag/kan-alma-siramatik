@@ -21,6 +21,7 @@ const defaultData = {
   ],
   tickets: [],
   logs: [],
+  feedbacks: [],
   config: {
     ticketPrefix: "K-",
     priorityPrefix: "Ö-",
@@ -238,7 +239,8 @@ const Database = {
 
   recall(number, desk, userEmail) {
     const db = readDb();
-    const ticket = db.tickets.find(t => t.number === number);
+    const cleanNo = (number || '').toUpperCase();
+    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
     if (!ticket) return null;
 
     ticket.status = "calling";
@@ -256,7 +258,8 @@ const Database = {
 
   complete(number, userEmail, details = {}) {
     const db = readDb();
-    const ticket = db.tickets.find(t => t.number === number);
+    const cleanNo = (number || '').toUpperCase();
+    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
     if (!ticket) return null;
 
     ticket.status = "completed";
@@ -276,6 +279,52 @@ const Database = {
     this.addLog(userEmail || ticket.processedBy || "sistem@hastane.com", "COMPLETE", number, ticket.desk, details);
     
     return ticket;
+  },
+
+  noShow(number, userEmail) {
+    const db = readDb();
+    const cleanNo = (number || '').toUpperCase();
+    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
+    if (!ticket) return null;
+
+    ticket.status = "noshow";
+    ticket.completedAt = new Date().toISOString();
+    if (userEmail) {
+      ticket.processedBy = userEmail;
+    }
+
+    writeDb(db);
+
+    // Add transaction log
+    this.addLog(userEmail || ticket.processedBy || "sistem@hastane.com", "NO_SHOW", number, ticket.desk);
+
+    return ticket;
+  },
+
+  submitFeedback(number, rating, comment = "") {
+    const db = readDb();
+    if (!db.feedbacks) db.feedbacks = [];
+
+    const numRating = Number(rating) || 5;
+    const feedbackItem = {
+      ticketNumber: number,
+      rating: Math.min(5, Math.max(1, numRating)),
+      comment: comment || "",
+      createdAt: new Date().toISOString()
+    };
+
+    db.feedbacks.push(feedbackItem);
+
+    // Also attach to the ticket if exists
+    const cleanNo = (number || '').toUpperCase();
+    const ticket = db.tickets.find(t => t.number.toUpperCase() === cleanNo || (cleanNo.length > 2 && t.number.endsWith(cleanNo.slice(-3))));
+    if (ticket) {
+      ticket.rating = feedbackItem.rating;
+      ticket.feedbackComment = feedbackItem.comment;
+    }
+
+    writeDb(db);
+    return feedbackItem;
   },
 
   resetQueue(userEmail = "admin@hastane.com") {
@@ -384,7 +433,11 @@ const Database = {
       })),
       calledHistory,
       nurseStats,
-      hourlyDistribution
+      hourlyDistribution,
+      averageRating: db.feedbacks && db.feedbacks.length > 0 
+        ? (db.feedbacks.reduce((acc, f) => acc + (f.rating || 5), 0) / db.feedbacks.length).toFixed(1)
+        : "5.0",
+      totalFeedbacks: db.feedbacks ? db.feedbacks.length : 0
     };
   },
 

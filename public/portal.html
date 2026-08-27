@@ -156,6 +156,9 @@
                                     <button id="btn-nurse-recall" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none" disabled>
                                         Tekrar Çağır
                                     </button>
+                                    <button id="btn-nurse-noshow" class="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none" disabled>
+                                        🚫 Gelmedi
+                                    </button>
                                 </div>
                             </div>
 
@@ -248,18 +251,22 @@
                 
                 <!-- TAB 1: Stats & Live Queue -->
                 <div id="tab-stats" class="admin-tab-content space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                            <span class="block text-slate-400 text-xs font-semibold uppercase">Bekleyen Toplam Hasta</span>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Bekleyen Toplam</span>
                             <span id="admin-stat-waiting" class="text-3xl font-black text-slate-800">-</span>
                         </div>
                         <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                            <span class="block text-slate-400 text-xs font-semibold uppercase">Çağrılan Toplam Hasta</span>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Çağrılan Toplam</span>
                             <span id="admin-stat-calling" class="text-3xl font-black text-blue-600">-</span>
                         </div>
                         <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                            <span class="block text-slate-400 text-xs font-semibold uppercase">Tamamlanan Toplam Hasta</span>
+                            <span class="block text-slate-400 text-xs font-semibold uppercase">Tamamlanan Toplam</span>
                             <span id="admin-stat-completed" class="text-3xl font-black text-emerald-600">-</span>
+                        </div>
+                        <div class="bg-amber-50/60 rounded-xl p-4 text-center border border-amber-200">
+                            <span class="block text-amber-800 text-xs font-semibold uppercase">⭐ Memnuniyet</span>
+                            <span id="admin-stat-rating" class="text-3xl font-black text-amber-600">-</span>
                         </div>
                     </div>
 
