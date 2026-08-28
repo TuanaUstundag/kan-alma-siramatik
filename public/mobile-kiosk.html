@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kan Alma Sıramatik | Mobil Uygulama</title>
+    <title>Sıra Al | Kan Alma Mobil Sıramatik</title>
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Siramatik">
+    <meta name="apple-mobile-web-app-title" content="Sıramatik">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2869/2869818.png">
 
     <!-- Tailwind CSS CDN -->
@@ -35,8 +35,8 @@
 </head>
 <body class="bg-gradient-to-b from-blue-600 via-indigo-700 to-slate-900 min-h-screen flex flex-col justify-between text-white p-4 select-none">
 
-    <!-- Header -->
-    <header class="text-center pt-4 space-y-1.5">
+    <!-- Mobile Header -->
+    <header class="text-center pt-3 space-y-1.5">
         <div class="inline-flex p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-lg">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -47,7 +47,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="w-full max-w-sm mx-auto my-auto py-4 space-y-4">
+    <main class="w-full max-w-sm mx-auto my-auto py-3 space-y-4">
         
         <!-- STEP 1: INITIAL STATE - QR SCAN BUTTON -->
         <div id="step-scan" class="bg-white text-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center border border-white/80">
@@ -57,9 +57,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                 </span>
-                <h2 class="text-xl font-black text-slate-800">Sıra Almak İçin</h2>
+                <h2 class="text-xl font-black text-slate-800">Sıra Numaranızı Alın</h2>
                 <p class="text-xs text-slate-500 font-medium leading-relaxed">
-                    Laboratuvar lobi ekranındaki (Kiosk) karekoda kameranızı tutarak sıra numaranızı oluşturun.
+                    Laboratuvar lobi ekranındaki (PC Kiosk) karekoda kameranızı tutarak sıranızı oluşturun.
                 </p>
             </div>
 
@@ -79,8 +79,8 @@
         </div>
 
         <!-- CAMERA SCANNER MODAL (Hidden by default) -->
-        <div id="modal-scanner" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex flex-col items-center justify-between p-6">
-            <div class="text-center space-y-1 pt-4 text-white">
+        <div id="modal-scanner" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex flex-col items-center justify-between p-6">
+            <div class="text-center space-y-1 pt-6 text-white">
                 <h3 class="text-lg font-black tracking-wide">KAREKODU OKUTUNUZ</h3>
                 <p class="text-xs text-slate-300">Kamerayı bilgisayar ekranındaki karekoda doğru tutun</p>
             </div>
@@ -93,13 +93,13 @@
             </div>
 
             <!-- Cancel Button -->
-            <button id="btn-cancel-scan" class="w-full max-w-[280px] py-3.5 bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold rounded-2xl text-sm backdrop-blur-sm transition-all">
+            <button id="btn-cancel-scan" class="w-full max-w-[280px] py-3.5 bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold rounded-2xl text-sm backdrop-blur-sm transition-all mb-4">
                 ✕ Taramayı Kapat
             </button>
         </div>
 
         <!-- STEP 2: TICKET SELECTION (Appears after QR scan) -->
-        <div id="step-tickets" class="hidden bg-white text-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center border border-white/80 animate-fade-in">
+        <div id="step-tickets" class="hidden bg-white text-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center border border-white/80">
             <div class="space-y-1">
                 <div class="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-full border border-emerald-200">
                     <span>✓ Karekod Doğrulandı</span>
@@ -156,13 +156,13 @@
             </div>
         </div>
 
-        <!-- Portal & Display shortcuts -->
+        <!-- Shortcuts -->
         <div class="flex justify-between items-center px-2 pt-2 text-xs">
             <a href="/portal.html" class="text-blue-200 hover:text-white font-medium flex items-center space-x-1">
-                <span>👩‍⚕️ Çalışan Portalı</span>
+                <span>👩‍⚕️ Personel Girişi</span>
             </a>
             <a href="/display.html" class="text-blue-200 hover:text-white font-medium flex items-center space-x-1">
-                <span>📺 TV Ekranı</span>
+                <span>📺 TV Çağrı Ekranı</span>
             </a>
         </div>
 
@@ -177,6 +177,11 @@
     <script>
       let html5QrCode = null;
       let isSubmitting = false;
+
+      // Ask for notification permission on initial load
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
 
       const stepScan = document.getElementById('step-scan');
       const stepTickets = document.getElementById('step-tickets');
@@ -197,7 +202,7 @@
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = "sine";
-          osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
           gain.gain.setValueAtTime(0.2, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
           osc.connect(gain);
@@ -230,14 +235,11 @@
             { facingMode: "environment" },
             config,
             (decodedText) => {
-              // Successfully decoded QR code!
               playScanBeep();
               if (navigator.vibrate) navigator.vibrate(100);
               showTicketOptions();
             },
-            (errorMessage) => {
-              // Parse error / looking for QR code
-            }
+            () => {}
           );
         } catch (err) {
           console.error("Camera error:", err);

@@ -1,8 +1,8 @@
 {
-  "name": "Kan Alma Siramatik Uygulamasi",
-  "short_name": "Siramatik",
-  "description": "Hastane Kan Alma Siramatik ve Takip Sistemi",
-  "start_url": ".",
+  "name": "Kan Alma Sıramatik",
+  "short_name": "Sıramatik",
+  "description": "Hastane Kan Alma Sıramatik ve Canlı Takip",
+  "start_url": "/mobile-kiosk.html",
   "display": "standalone",
   "background_color": "#1e293b",
   "theme_color": "#2563eb",

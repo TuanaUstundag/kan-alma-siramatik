@@ -14,8 +14,19 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
-// Home / Root Route serves Kiosk Totem Screen
+// Home / Root Route: Smart Device Detection
 app.get('/', (req, res) => {
+  const ua = req.headers['user-agent'] || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  
+  if (isMobile) {
+    return res.sendFile(path.join(__dirname, 'public', 'mobile-kiosk.html'));
+  }
+  res.sendFile(path.join(__dirname, 'public', 'kiosk.html'));
+});
+
+// Dedicated desktop kiosk route
+app.get('/kiosk', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'kiosk.html'));
 });
 
