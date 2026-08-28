@@ -1,0 +1,17 @@
+{
+  "name": "Kan Alma Siramatik Uygulamasi",
+  "short_name": "Siramatik",
+  "description": "Hastane Kan Alma Siramatik ve Takip Sistemi",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1e293b",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

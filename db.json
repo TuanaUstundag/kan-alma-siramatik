@@ -19,9 +19,9 @@
       "patientName": "Ahmet Yilmaz",
       "type": "standard",
       "status": "completed",
-      "createdAt": "2026-08-26T12:36:28.904Z",
-      "calledAt": "2026-08-26T12:36:28.914Z",
-      "completedAt": "2026-08-26T12:36:28.969Z",
+      "createdAt": "2026-08-27T10:13:39.686Z",
+      "calledAt": "2026-08-27T10:13:39.692Z",
+      "completedAt": "2026-08-27T10:13:39.716Z",
       "desk": "Kan Alma Odasi 2",
       "processedBy": "ayse.hemsire@hastane.com",
       "duration": "02:45",
@@ -31,87 +31,47 @@
       ],
       "notes": [
         "Zor Damar"
-      ]
+      ],
+      "rating": 5,
+      "feedbackComment": "Cok hizli ve kibardi"
     },
     {
       "number": "K-102",
       "patientName": "Standart Hasta 1",
       "type": "standard",
-      "status": "completed",
-      "createdAt": "2026-08-26T12:36:29.017Z",
-      "calledAt": "2026-08-26T12:37:56.333Z",
-      "completedAt": "2026-08-26T12:37:57.806Z",
-      "desk": "Kan Alma Odası 1",
-      "processedBy": "ayse.hemsire@hastane.com",
-      "duration": "00:01",
-      "tubes": [],
-      "notes": []
+      "status": "waiting",
+      "createdAt": "2026-08-27T10:13:39.756Z",
+      "calledAt": null,
+      "completedAt": null,
+      "desk": null,
+      "processedBy": null
     },
     {
       "number": "Ö-201",
       "patientName": "Oncelikli Hasta 1",
       "type": "priority",
-      "status": "calling",
-      "createdAt": "2026-08-26T12:36:29.021Z",
-      "calledAt": "2026-08-26T12:36:29.032Z",
-      "completedAt": null,
+      "status": "noshow",
+      "createdAt": "2026-08-27T10:13:39.759Z",
+      "calledAt": "2026-08-27T10:13:39.768Z",
+      "completedAt": "2026-08-27T10:13:39.773Z",
       "desk": "Kan Alma Odasi 2",
       "processedBy": "ayse.hemsire@hastane.com"
     },
     {
-      "number": "Ö-202",
-      "patientName": "Öncelikli Hasta",
-      "type": "priority",
-      "status": "completed",
-      "createdAt": "2026-08-26T12:36:58.390Z",
-      "calledAt": "2026-08-26T12:37:25.767Z",
-      "completedAt": "2026-08-26T12:37:36.738Z",
-      "desk": "Kan Alma Odası 1",
-      "processedBy": "ayse.hemsire@hastane.com",
-      "duration": "00:10",
-      "tubes": [],
-      "notes": [
-        "Hassas / Çocuk"
-      ]
-    },
-    {
       "number": "K-103",
-      "patientName": "Misafir Hasta",
+      "patientName": "Gelmeyen Hasta",
       "type": "standard",
-      "status": "completed",
-      "createdAt": "2026-08-26T12:37:41.284Z",
-      "calledAt": "2026-08-26T12:37:58.336Z",
-      "completedAt": "2026-08-26T12:38:01.291Z",
-      "desk": "Kan Alma Odası 1",
-      "processedBy": "ayse.hemsire@hastane.com",
-      "duration": "00:02",
-      "tubes": [
-        "🟣 Hemogram"
-      ],
-      "notes": []
-    },
-    {
-      "number": "K-104",
-      "patientName": "Misafir Hasta",
-      "type": "standard",
-      "status": "completed",
-      "createdAt": "2026-08-27T05:45:14.056Z",
-      "calledAt": "2026-08-27T05:45:41.212Z",
-      "completedAt": "2026-08-27T05:45:55.842Z",
-      "desk": "Kan Alma Odası 1",
-      "processedBy": "ayse.hemsire@hastane.com",
-      "duration": "00:14",
-      "tubes": [
-        "🟡 Hormon"
-      ],
-      "notes": [
-        "Zor Damar"
-      ]
+      "status": "waiting",
+      "createdAt": "2026-08-27T10:13:39.765Z",
+      "calledAt": null,
+      "completedAt": null,
+      "desk": null,
+      "processedBy": null
     }
   ],
   "logs": [
     {
-      "timestamp": "2026-08-26T12:36:28.793Z",
+      "timestamp": "2026-08-27T10:13:39.581Z",
       "userEmail": "admin@hastane.com",
       "userName": "Bashekim / Sistem Yoneticisi",
       "action": "RESET_QUEUE",
@@ -123,7 +83,7 @@
       "notes": []
     },
     {
-      "timestamp": "2026-08-26T12:36:28.916Z",
+      "timestamp": "2026-08-27T10:13:39.694Z",
       "userEmail": "ayse.hemsire@hastane.com",
       "userName": "Hemsire Ayse",
       "action": "CALL",
@@ -132,7 +92,7 @@
       "desk": "Kan Alma Odasi 2"
     },
     {
-      "timestamp": "2026-08-26T12:36:28.971Z",
+      "timestamp": "2026-08-27T10:13:39.718Z",
       "userEmail": "ayse.hemsire@hastane.com",
       "userName": "Hemsire Ayse",
       "action": "COMPLETE",
@@ -149,7 +109,7 @@
       ]
     },
     {
-      "timestamp": "2026-08-26T12:36:29.039Z",
+      "timestamp": "2026-08-27T10:13:39.769Z",
       "userEmail": "ayse.hemsire@hastane.com",
       "userName": "Hemsire Ayse",
       "action": "CALL",
@@ -158,102 +118,39 @@
       "desk": "Kan Alma Odasi 2"
     },
     {
-      "timestamp": "2026-08-26T12:37:25.769Z",
+      "timestamp": "2026-08-27T10:13:39.774Z",
       "userEmail": "ayse.hemsire@hastane.com",
       "userName": "Hemsire Ayse",
-      "action": "CALL",
-      "ticketNumber": "Ö-202",
-      "patientName": "Öncelikli Hasta",
-      "desk": "Kan Alma Odası 1"
-    },
-    {
-      "timestamp": "2026-08-26T12:37:36.740Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "COMPLETE",
-      "ticketNumber": "Ö-202",
-      "patientName": "Öncelikli Hasta",
-      "desk": "Kan Alma Odası 1",
-      "duration": "00:10",
-      "tubes": [],
-      "notes": [
-        "Hassas / Çocuk"
-      ]
-    },
-    {
-      "timestamp": "2026-08-26T12:37:56.335Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "CALL",
-      "ticketNumber": "K-102",
-      "patientName": "Standart Hasta 1",
-      "desk": "Kan Alma Odası 1"
-    },
-    {
-      "timestamp": "2026-08-26T12:37:57.807Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "COMPLETE",
-      "ticketNumber": "K-102",
-      "patientName": "Standart Hasta 1",
-      "desk": "Kan Alma Odası 1",
-      "duration": "00:01",
+      "action": "NO_SHOW",
+      "ticketNumber": "�-201",
+      "patientName": null,
+      "desk": "Kan Alma Odasi 2",
+      "duration": null,
       "tubes": [],
       "notes": []
-    },
-    {
-      "timestamp": "2026-08-26T12:37:58.338Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "CALL",
-      "ticketNumber": "K-103",
-      "patientName": "Misafir Hasta",
-      "desk": "Kan Alma Odası 1"
-    },
-    {
-      "timestamp": "2026-08-26T12:38:01.292Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "COMPLETE",
-      "ticketNumber": "K-103",
-      "patientName": "Misafir Hasta",
-      "desk": "Kan Alma Odası 1",
-      "duration": "00:02",
-      "tubes": [
-        "🟣 Hemogram"
-      ],
-      "notes": []
-    },
-    {
-      "timestamp": "2026-08-27T05:45:41.215Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "CALL",
-      "ticketNumber": "K-104",
-      "patientName": "Misafir Hasta",
-      "desk": "Kan Alma Odası 1"
-    },
-    {
-      "timestamp": "2026-08-27T05:45:55.843Z",
-      "userEmail": "ayse.hemsire@hastane.com",
-      "userName": "Hemsire Ayse",
-      "action": "COMPLETE",
-      "ticketNumber": "K-104",
-      "patientName": "Misafir Hasta",
-      "desk": "Kan Alma Odası 1",
-      "duration": "00:14",
-      "tubes": [
-        "🟡 Hormon"
-      ],
-      "notes": [
-        "Zor Damar"
-      ]
     }
   ],
   "config": {
     "ticketPrefix": "K-",
     "priorityPrefix": "Ö-",
-    "nextNumber": 105,
-    "nextPriorityNumber": 203
-  }
+    "nextNumber": 104,
+    "nextPriorityNumber": 202
+  },
+  "feedbacks": [
+    {
+      "ticketNumber": "K-101",
+      "rating": 5,
+      "comment": "Cok hizli ve kibardi",
+      "createdAt": "2026-08-27T09:54:52.256Z"
+    },
+    {
+      "ticketNumber": "K-101",
+      "patientName": "Ahmet Yilmaz",
+      "desk": "Kan Alma Odasi 2",
+      "processedBy": "ayse.hemsire@hastane.com",
+      "rating": 5,
+      "comment": "Cok hizli ve kibardi",
+      "createdAt": "2026-08-27T10:13:39.779Z"
+    }
+  ]
 }
