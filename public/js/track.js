@@ -60,26 +60,73 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBannerVisibility();
   }
 
-  document.body.addEventListener('click', initAudio);
-  document.body.addEventListener('touchstart', initAudio);
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  async function registerPushSubscription() {
+    if (!ticketNumber || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const keyRes = await fetch('/api/vapid-public-key');
+      if (!keyRes.ok) return;
+      const { publicKey } = await keyRes.json();
+      if (!publicKey) return;
+
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const appServerKey = urlBase64ToUint8Array(publicKey);
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: appServerKey
+        });
+      }
+
+      await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number: ticketNumber, subscription: sub })
+      });
+      console.log("Push subscription connected for ticket", ticketNumber);
+    } catch (e) {
+      console.warn("Push subscription warning:", e);
+    }
+  }
+
+  document.body.addEventListener('click', () => {
+    initAudio();
+    registerPushSubscription();
+  });
+  document.body.addEventListener('touchstart', () => {
+    initAudio();
+    registerPushSubscription();
+  });
 
   if (btnAllowPermissions) {
-    btnAllowPermissions.addEventListener('click', (e) => {
+    btnAllowPermissions.addEventListener('click', async (e) => {
       e.stopPropagation();
       initAudio();
       
       if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            new Notification("Bildirimler Aktif Edildi", {
-              body: "Sıranız geldiğinde ekran arka planda olsa dahi bildirim alacaksınız.",
-              tag: "sira-test"
-            });
-          }
-          checkBannerVisibility();
-        });
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          await registerPushSubscription();
+        }
+        checkBannerVisibility();
       }
     });
+  }
+
+  // Trigger push registration on load if permission is already granted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    registerPushSubscription();
   }
 
   // Sound generator

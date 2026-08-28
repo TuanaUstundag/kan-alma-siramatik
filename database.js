@@ -336,6 +336,31 @@ const Database = {
     return (db.feedbacks || []).slice().reverse();
   },
 
+  saveSubscription(number, subscription) {
+    const db = readDb();
+    if (!db.subscriptions) db.subscriptions = {};
+    const cleanNo = (number || '').toUpperCase();
+    db.subscriptions[cleanNo] = subscription;
+    writeDb(db);
+    return true;
+  },
+
+  getSubscription(number) {
+    const db = readDb();
+    if (!db.subscriptions) return null;
+    const cleanNo = (number || '').toUpperCase();
+    return db.subscriptions[cleanNo] || null;
+  },
+
+  removeSubscription(number) {
+    const db = readDb();
+    if (!db.subscriptions) return false;
+    const cleanNo = (number || '').toUpperCase();
+    delete db.subscriptions[cleanNo];
+    writeDb(db);
+    return true;
+  },
+
   resetQueue(userEmail = "admin@hastane.com") {
     const db = readDb();
     

@@ -4,12 +4,35 @@ const { Server } = require('socket.io');
 const path = require('path');
 const Database = require('./database');
 const os = require('os');
+const webpush = require('web-push');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
+
+// VAPID Keys for OS-level Push Notifications
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY || 'BHA6N-MFWRfHK4eypIVVwbshRNar7zocLXOLcAsmCxvoBPSJWr86twY_qgY4VN4Y81F8D0bojfbEAalZMsDbJRI';
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'cCeAU8aNBVRS8MMjux1NAOie0aKmOvoVPz3g4HYphx4';
+
+webpush.setVapidDetails(
+  'mailto:destek@hastane.com',
+  publicVapidKey,
+  privateVapidKey
+);
+
+function sendPushNotificationToTicket(ticketNumber, payload) {
+  const sub = Database.getSubscription(ticketNumber);
+  if (!sub) return Promise.resolve(null);
+
+  return webpush.sendNotification(sub, JSON.stringify(payload)).catch(err => {
+    console.warn(`Web push notification failed for ticket ${ticketNumber}:`, err.statusCode || err.message);
+    if (err.statusCode === 404 || err.statusCode === 410) {
+      Database.removeSubscription(ticketNumber);
+    }
+  });
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
@@ -150,6 +173,22 @@ app.get('/api/ticket/:number', (req, res) => {
   });
 });
 
+// Get VAPID Public Key for client push registration
+app.get('/api/vapid-public-key', (req, res) => {
+  res.json({ publicKey: publicVapidKey });
+});
+
+// Save client Push Subscription for OS background notifications
+app.post('/api/subscribe', (req, res) => {
+  const { number, subscription } = req.body || {};
+  if (!number || !subscription) {
+    return res.status(400).json({ error: 'Number and subscription are required' });
+  }
+
+  Database.saveSubscription(number, subscription);
+  res.status(201).json({ success: true });
+});
+
 // Call the next patient (called from portal nurse panel)
 app.post('/api/call', (req, res) => {
   const { desk } = req.body;
@@ -167,8 +206,16 @@ app.post('/api/call', (req, res) => {
   // 1. Broadcast call event
   io.emit('ticket-called', { ticket, desk });
 
-  // 2. Target specific patient
+  // 2. Target specific patient socket
   io.to(ticket.number).emit('your-turn', { ticket, desk });
+
+  // 3. Send OS-level push notification to wake up locked/background mobile phone
+  sendPushNotificationToTicket(ticket.number, {
+    title: "🔔 SIRANIZ GELDİ!",
+    body: `Lütfen hemen ${desk} birimine geçiniz. (Bilet No: ${ticket.number})`,
+    icon: "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
+    data: { url: `/track?no=${encodeURIComponent(ticket.number)}` }
+  });
 
   res.json(ticket);
 });
@@ -190,8 +237,16 @@ app.post('/api/recall', (req, res) => {
   // 1. Broadcast call event
   io.emit('ticket-called', { ticket, desk });
 
-  // 2. Target specific patient
+  // 2. Target specific patient socket
   io.to(number).emit('your-turn', { ticket, desk });
+
+  // 3. Send OS-level push notification to wake up locked/background mobile phone
+  sendPushNotificationToTicket(number, {
+    title: "🔔 SIRANIZ GELDİ!",
+    body: `Lütfen hemen ${desk} birimine geçiniz. (Bilet No: ${number})`,
+    icon: "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
+    data: { url: `/track?no=${encodeURIComponent(number)}` }
+  });
 
   res.json(ticket);
 });
