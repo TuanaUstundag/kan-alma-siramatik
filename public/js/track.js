@@ -301,15 +301,32 @@ document.addEventListener('DOMContentLoaded', () => {
       playAlarm();
       
       if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200, 100, 200]);
+        navigator.vibrate([300, 100, 300, 100, 300]);
       }
 
+      // Trigger OS-level system pop-up banner over all other apps
       if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification("Sıranız Geldi!", {
+        const notifTitle = "🔔 SIRANIZ GELDİ!";
+        const notifOptions = {
           body: `Lütfen hemen ${desk} birimine geçiniz. (Bilet No: ${ticketNumber})`,
+          icon: "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
+          badge: "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
           tag: "sira-cagrisi",
-          requireInteraction: true
-        });
+          renotify: true,
+          requireInteraction: true,
+          vibrate: [300, 100, 300, 100, 300],
+          data: { url: window.location.href }
+        };
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(notifTitle, notifOptions);
+          }).catch(() => {
+            new Notification(notifTitle, notifOptions);
+          });
+        } else {
+          new Notification(notifTitle, notifOptions);
+        }
       }
     }
   }
