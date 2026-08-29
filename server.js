@@ -5,6 +5,7 @@ const path = require('path');
 const Database = require('./database');
 const os = require('os');
 const webpush = require('web-push');
+const { sendSMS } = require('./smsService');
 
 const app = express();
 const server = http.createServer(app);
@@ -147,10 +148,10 @@ app.get('/api/stats', (req, res) => {
   res.json(Database.getStats());
 });
 
-// Create a new queue ticket (called from kiosk)
+// Create a new queue ticket (called from kiosk or mobile)
 app.post('/api/ticket', (req, res) => {
-  const { patientName, type } = req.body || {};
-  const ticket = Database.createTicket(patientName, type);
+  const { patientName, type, phone } = req.body || {};
+  const ticket = Database.createTicket(type || 'standard', patientName, phone);
   
   // Broadcast to all clients
   io.emit('ticket-created', ticket);
@@ -217,6 +218,12 @@ app.post('/api/call', (req, res) => {
     data: { url: `/track?no=${encodeURIComponent(ticket.number)}` }
   });
 
+  // 4. Send Real SMS Notification if patient provided a phone number
+  if (ticket.phone) {
+    const smsMsg = `Sayin ${ticket.patientName || 'Hastamiz'}, Kan Alma siraniz geldi! Lutfen hemen ${desk} birimine geciniz. (Sira No: ${ticket.number})`;
+    sendSMS(ticket.phone, smsMsg);
+  }
+
   res.json(ticket);
 });
 
@@ -247,6 +254,12 @@ app.post('/api/recall', (req, res) => {
     icon: "https://cdn-icons-png.flaticon.com/512/2869/2869818.png",
     data: { url: `/track?no=${encodeURIComponent(number)}` }
   });
+
+  // 4. Send Real SMS Notification if patient provided a phone number
+  if (ticket.phone) {
+    const smsMsg = `Sayin ${ticket.patientName || 'Hastamiz'}, Kan Alma siraniz tekrar cagrildi! Lutfen hemen ${desk} birimine geciniz. (Sira No: ${ticket.number})`;
+    sendSMS(ticket.phone, smsMsg);
+  }
 
   res.json(ticket);
 });

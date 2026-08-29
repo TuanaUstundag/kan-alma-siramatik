@@ -168,21 +168,25 @@ const Database = {
     return db.tickets.find(t => t.number === number) || null;
   },
 
-  createTicket(patientName = "Misafir Hasta", type = "standard") {
+  createTicket(type = "standard", patientName = "Misafir Hasta", phone = "") {
     const db = readDb();
-    if (!db.config.nextPriorityNumber) {
-      db.config.nextPriorityNumber = 201;
-      db.config.priorityPrefix = "Ö-";
-    }
-
     const isPriority = type === "priority";
     const prefix = isPriority ? (db.config.priorityPrefix || "Ö-") : (db.config.ticketPrefix || "K-");
     const num = isPriority ? (db.config.nextPriorityNumber || 201) : (db.config.nextNumber || 101);
     const ticketNumber = `${prefix}${num}`;
 
+    // Clean phone number (e.g. 0532 123 45 67 -> 905321234567)
+    let cleanPhone = (phone || "").replace(/[^0-9]/g, '');
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+      cleanPhone = '9' + cleanPhone;
+    } else if (cleanPhone.length === 10 && cleanPhone.startsWith('5')) {
+      cleanPhone = '90' + cleanPhone;
+    }
+
     const newTicket = {
       number: ticketNumber,
       patientName: patientName ? patientName.trim() : (isPriority ? "Öncelikli Hasta" : "Misafir Hasta"),
+      phone: cleanPhone || null,
       type: isPriority ? "priority" : "standard",
       status: "waiting",
       createdAt: new Date().toISOString(),
